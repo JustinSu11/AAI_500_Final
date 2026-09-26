@@ -6,3 +6,4 @@ ipykernel
 matplotlib
 scipy
 ucimlrepo
+pip-system-certs
