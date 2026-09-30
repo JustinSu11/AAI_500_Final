@@ -1,6 +1,10 @@
 
 ## Analysis Plan — Predictive Maintenance
 
+First compare feature distributions and non-failure cases and computing confidence intervals for each failure condition.
+
+Then compare the data, address class imbalance by bootstrap-resampling the training set only, train a baseline probabilistic model (logistic regression), and evaluate it with bootstrapped confidence intervals on performance metrics.
+
 ### Phase 1: EDA — Failure Condition Distributions
 
 - [ ] Split `df` into `failures` (Machine failure == 1) and
