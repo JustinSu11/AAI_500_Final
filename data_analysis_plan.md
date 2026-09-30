@@ -7,8 +7,8 @@ Then compare the data, address class imbalance by bootstrap-resampling the train
 
 ### Phase 1: EDA — Failure Condition Distributions
 
-- [ ] Split `df` into `failures` (Machine failure == 1) and
-  `no_failures` (Machine failure == 0).
+- [X] Split `df` into `failed` (Machine failure == 1) and
+  `operational` (Machine failure == 0).
 - [ ] Plot the distribution of each numeric feature (Air temperature,
   Process temperature, Rotational speed, Torque, Tool wear) for
   both groups side by side.
