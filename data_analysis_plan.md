@@ -1,20 +1,48 @@
 
 ## Analysis Plan — Predictive Maintenance
 
-First compare feature distributions and non-failure cases and computing confidence intervals for each failure condition.
-
-Then compare the data, address class imbalance by bootstrap-resampling the training set only, train a baseline probabilistic model (logistic regression), and evaluate it with bootstrapped confidence intervals on performance metrics.
+This plan analyzes the AI4I 2020 Predictive Maintenance Dataset to
+predict machine failure from process and sensor readings. It first
+uses exploratory and inferential statistics — comparing feature
+distributions between failure and non-failure cases and computing
+confidence intervals for each failure condition — to understand what
+distinguishes a failure event before any model is built. It then
+prepares the data (leakage check, encoding, train/test split),
+addresses class imbalance by bootstrap-resampling the training set
+only, trains a baseline probabilistic model (logistic regression),
+and evaluates it with bootstrapped confidence intervals on
+performance metrics rather than single point estimates.
 
 ### Phase 1: EDA — Failure Condition Distributions
 
 - [X] Split `df` into `failed` (Machine failure == 1) and
   `operational` (Machine failure == 0).
-- [ ] Plot the distribution of each numeric feature (Air temperature,
+- [X] Plot the distribution of each numeric feature (Air temperature,
   Process temperature, Rotational speed, Torque, Tool wear) for
-  both groups side by side.
-- [ ] For each of the five failure sub-conditions (TWF, HDF, PWF, OSF,
-  RNF), isolate rows where that flag is 1 and summarize the
-  distribution of the relevant feature(s) tied to that mode.
+  both groups side by side, using density (not raw count) so the
+  ~30x difference in group sizes doesn't distort the comparison.
+- [ ] **Finding so far:** Air temperature, Process temperature, and
+  Rotational speed show no visible separation between failed and
+  operational — the shapes track closely once plotted as density.
+  This is expected: most failure modes (HDF, PWF, OSF) depend on
+  *interactions* between features (a difference, a product), not on
+  any single raw value crossing a threshold. Confirm whether Torque
+  and Tool wear show more separation individually before moving on,
+  since those are more directly tied to TWF/OSF.
+- [ ] **Fix before continuing:** the `failure_conditions` variable in
+  the notebook (cell with `df.columns[:7]`) currently holds the six
+  sensor columns + `Machine failure`, not the five sub-failure flags
+  (TWF, HDF, PWF, OSF, RNF). Correct this before using it — the
+  actual failure-condition columns are `df.columns[7:12]`.
+- [ ] Engineer the interaction features tied to each failure mode and
+  plot those split by the matching flag, not by overall `Machine
+  failure`:
+  - `air_temp_diff = Process temperature - Air temperature`, split
+    by HDF (HDF also depends on Rotational speed being low — look at
+    both together)
+  - `power = Torque * Rotational speed` (convert rpm to rad/s),
+    split by PWF
+  - `tool_wear_x_torque = Tool wear * Torque`, split by OSF
 - [ ] Compute point estimates (mean, std) for each of those
   distributions.
 
@@ -30,12 +58,15 @@ Then compare the data, address class imbalance by bootstrap-resampling the train
   the statistic each time, take the 2.5th/97.5th percentile as
   your interval.
 - [ ] Compare intervals across the five failure conditions; flag any
-  that are wide due to small sample size (e.g., RNF).
+  that are wide due to small sample size (e.g., RNF, which is only
+  5 data points and independent of every feature — expect this
+  interval to be uninformative almost by design).
 
 ### Phase 3: Data Preparation for Modeling
 
 - [ ] Confirm the feature set excludes TWF/HDF/PWF/OSF/RNF (leakage
-  check).
+  check) — run `X.columns.tolist()` and verify none of the five
+  flags appear.
 - [ ] Encode the categorical `Type` feature.
 - [ ] Split into train/test sets before any resampling; decide split
   ratio and whether to stratify on `Machine failure`.
@@ -50,7 +81,10 @@ Then compare the data, address class imbalance by bootstrap-resampling the train
 ### Phase 5: Model Selection
 
 - [ ] Choose a baseline model for estimating P(failure = 1 |
-  features); justify the choice from your EDA findings.
+  features); justify the choice from your EDA findings — note that
+  since individual raw features don't separate the classes well,
+  the model (or your engineered features) needs to capture the
+  interactions identified in Phase 1.
 - [ ] Train the model on the balanced training set.
 - [ ] If comparing models, decide your comparison metric up front and
   justify why accuracy alone is inappropriate here.
@@ -69,4 +103,4 @@ Then compare the data, address class imbalance by bootstrap-resampling the train
   performance, with its uncertainty intervals, support real
   predictive maintenance decisions?
 - [ ] State what would be needed (more data, different features, a
-  different model) to narrow the wide intervals from Phase 2/20.
+  different model) to narrow the wide intervals from Phase 2/6.
