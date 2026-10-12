@@ -7,3 +7,5 @@ matplotlib
 scipy
 ucimlrepo
 pip-system-certs
+scikit-learn
+pgmpy
